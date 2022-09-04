@@ -1,6 +1,7 @@
 import { collection, query, onSnapshot, orderBy, setDoc, doc, addDoc, deleteDoc } from "firebase/firestore";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import Modal from "../components/Modal";
 import { useUserAuth } from "../context/AuthContext";
 import { db } from "../firebase";   
 
@@ -11,6 +12,9 @@ const MyTodos = () => {
     const [changed, setChanged] = useState(false)
     const [error, seterror] = useState('')
     const [adding, setAdding] = useState(false)
+    const [edit, setEdit] = useState(false)
+    const [modalTodo, setModalTodo] = useState('')
+    const [modalId, setModalId] = useState('')
 
     const { user } = useUserAuth() 
     const router = useRouter()
@@ -90,10 +94,17 @@ const MyTodos = () => {
         setChanged(current => !current)
     }
 
+    // 
+    const editTodo = (id, todo) => {
+        setModalId(id)
+        setModalTodo(todo)
+        setEdit(true)
+    }
+
 
     return (
         <>
-            <form className="mt-10 w-3/5 mx-auto">   
+            <form className="mt-10 w-3/5 mx-auto relative">   
                 <label htmlFor="search" className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-gray-300">Your Email</label>
                 <div className="relative">
                     <input onChange={(e) => setTodo(e.target.value)} value={todo} type="search" id="search" className="block p-4 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Type your todo..." autoComplete="off" required />
@@ -113,8 +124,8 @@ const MyTodos = () => {
                         {doc.done && <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 cursor-pointer" fill="#2563eb" viewBox="0 0 448 512"><path d="M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zM337 209L209 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L303 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>}
                     </div>
                     <div className="col-span-11 xl:-ml-5">
-                        {!doc.done && <><p className="flex justify-between text-blue-600 font-semibold"><span>{doc.todo}</span> <span onClick={() => removeTodo(doc.id)} className="cursor-pointer text-red-600">Delete</span> </p></>}
-                        {doc.done && <><p className="flex justify-between text-blue-600 font-semibold"><span className="line-through">{doc.todo}</span> <span onClick={() => removeTodo(doc.id)} className="cursor-pointer text-red-600">Delete</span> </p></>}
+                        {!doc.done && <><p className="flex justify-between text-blue-600 font-semibold"><span>{doc.todo}</span><span className="cursor-pointer text-red-600"><span onClick={() => removeTodo(doc.id)}>Delete</span><span onClick={() => editTodo(doc.id, doc.todo)} className="ml-4 text-blue-500">Edit</span></span></p></>}
+                        {doc.done && <><p className="flex justify-between text-blue-600 font-semibold"><span className="line-through">{doc.todo}</span> <span onClick={() => removeTodo(doc.id)} className="cursor-pointer text-red-600">Delete<span className="ml-4 text-blue-500">Edit</span></span> </p></>}
                     </div>
                     <div className="md:col-start-2 col-span-11 xl:-ml-5">
                         <p className="text-sm text-gray-800 font-light"> Author: {doc.author} </p>
@@ -123,6 +134,7 @@ const MyTodos = () => {
                 ))}
     
             </div>
+            {edit && <Modal id={modalId} todo={modalTodo} />}
         </>
     )
 }
